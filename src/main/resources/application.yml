@@ -1,0 +1,26 @@
+spring:
+    application:
+      name: farmguardian
+    datasource:
+      url: jdbc:mysql://localhost:3306/farmguardian
+    profiles:
+      active: local
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+
+decorator:
+  datasource:
+    p6spy:
+      # P6Spy 로그를 어떤 형식으로 출력할지 지정합니다.
+      # multiline: 쿼리를 여러 줄에 걸쳐 보기 좋게 포맷팅합니다.
+      # sql: 단순 SQL 포맷입니다.
+      log-format-strategy: multiline
+
+logging.level:
+  org.hibernate.SQL: debug
+  #org.hibernate.type: trace
+
+
+
