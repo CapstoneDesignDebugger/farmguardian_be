@@ -60,6 +60,7 @@ public class JwtTokenProvider {
     }
 
     // 토큰 검증
+    // TODO : exception 구체화 필요.
     public boolean validateToken(String token) {
         try {
             getClaims(token);
