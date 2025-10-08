@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "origin_image")
+@Table(name = "origin_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OriginImage {
@@ -22,8 +24,8 @@ public class OriginImage {
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
 
-    @Column(nullable = false, length = 512)
-    private String url;
+    @Column(name = "cloud_url", nullable = false, length = 512)
+    private String cloudUrl;
 
     @Column(nullable = false)
     private Integer height;
@@ -31,13 +33,10 @@ public class OriginImage {
     @Column(nullable = false)
     private Integer width;
 
-    @Column(nullable = false, precision = 10, scale = 7)
-    private BigDecimal latitude;
-
-    @Column(nullable = false, precision = 10, scale = 7)
-    private BigDecimal longitude;
-
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(columnDefinition = "json")
+    private String analysisResult;  // JSON 문자열 그대로 저장
 }
