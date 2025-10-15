@@ -31,6 +31,9 @@ application-local.yml
 .env
 secret/
 
+# Firebase credentials
+*firebase*.json
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
