@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "fcm_tokens")
@@ -31,11 +27,16 @@ public class FcmToken {
     @Column(nullable = false)
     private Platform platform;
 
-    @CreatedDate
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    public static FcmToken create(User user, String tokenValue, Platform platform) {
+        FcmToken fcmToken = new FcmToken();
+        fcmToken.user = user;
+        fcmToken.tokenValue = tokenValue;
+        fcmToken.platform = platform;
+        return fcmToken;
+    }
 
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    // 토큰 업데이트
+    public void updateToken(String newTokenValue) {
+        this.tokenValue = newTokenValue;
+    }
 }
