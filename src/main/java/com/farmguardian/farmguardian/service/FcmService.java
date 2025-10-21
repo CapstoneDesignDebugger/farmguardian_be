@@ -35,9 +35,7 @@ public class FcmService {
         Optional<FcmToken> existingToken = fcmTokenRepository.findByTokenValue(tokenValue);
 
         if (existingToken.isPresent()) {
-            // 이미 등록된 토큰이면 업데이트
-            existingToken.get().updateToken(tokenValue);
-            log.info("FCM token updated for user: {}", userId);
+            log.info("FCM token already existed: {}", userId);
         } else {
             // 새로운 토큰 등록
             FcmToken fcmToken = FcmToken.create(user, tokenValue, platform);
