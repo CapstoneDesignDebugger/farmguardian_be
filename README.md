@@ -137,19 +137,6 @@ src/
 - Gradle 8.x
 - Firebase 프로젝트 (FCM 사용)
 
-### 설치 및 실행
-
-1. **레포지토리 클론**
-```bash
-git clone <repository-url>
-cd farmguardian
-```
-
-2. **MySQL 데이터베이스 생성**
-```sql
-CREATE DATABASE farmguardian CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
 ## 사용 예시
 
 ### 1. 회원가입
@@ -239,18 +226,6 @@ User (1) ─── (N) RefreshToken
 Device (1) ─── (N) OriginImage
 ```
 
-
-## 테스트
-
-### 테스트 실행
-```bash
-# 전체 테스트
-./gradlew test
-
-# 특정 테스트 클래스
-./gradlew test --tests AuthControllerIntegrationTest
-```
-
 ## 개발 가이드
 
 ### 코딩 컨벤션
@@ -258,16 +233,6 @@ Device (1) ─── (N) OriginImage
 - **Service**: `@Transactional` 트랜잭션 관리
 - **Repository**: Spring Data JPA 메서드 네이밍 컨벤션
 - **DTO/Entity 분리**: API 응답에 Entity 직접 노출 금지
-
-### Git 커밋 메시지
-```
-feat: 새로운 기능 추가
-fix: 버그 수정
-refactor: 코드 리팩토링
-docs: 문서 수정
-test: 테스트 코드 추가/수정
-chore: 빌드/설정 변경
-```
 
 ## 향후 개선 계획
 - [ ] GlobalExceptionHandler 구현 (통합 예외 처리)
