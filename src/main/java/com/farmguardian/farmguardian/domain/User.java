@@ -2,6 +2,7 @@ package com.farmguardian.farmguardian.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -20,11 +21,17 @@ public class User extends BaseDate {
     @Column(name = "user_id")
     private Long id;
 
+    @Column(unique = true)
     private String email;
     private String password;
 
-    public User(String email, String password) {
+    @Enumerated(EnumType.STRING)
+    private Role role; // ✅ Role 필드
+
+    @Builder
+    public User(String email, String password, Role role) {
         this.email = email;
         this.password = password;
+        this.role = role;
     }
 }
