@@ -5,15 +5,18 @@ import com.farmguardian.farmguardian.domain.TargetCrop;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 public class DeviceResponseDto {
-    private Long deviceId;
+    private Long id;
+    private String deviceUuid;
     private TargetCrop targetCrop;
     private String targetCropName;
     private BigDecimal latitude;
@@ -23,7 +26,8 @@ public class DeviceResponseDto {
 
     public static DeviceResponseDto from(Device device) {
         return DeviceResponseDto.builder()
-                .deviceId(device.getId())
+                .id(device.getId())
+                .deviceUuid(device.getDeviceUuid())
                 .targetCrop(device.getTargetCrop())
                 .targetCropName(device.getTargetCrop() != null ? device.getTargetCrop().getKoreanName() : null)
                 .latitude(device.getLatitude())
