@@ -1,5 +1,6 @@
 package com.farmguardian.farmguardian.controller;
 
+import com.farmguardian.farmguardian.config.auth.UserDetailsImpl;
 import com.farmguardian.farmguardian.dto.request.FcmSendRequestDto;
 import com.farmguardian.farmguardian.dto.request.FcmTokenRegisterRequestDto;
 import com.farmguardian.farmguardian.service.FcmService;
@@ -19,8 +20,9 @@ public class FcmController {
     // FCM 토큰 등록
     @PostMapping("/token")
     public ResponseEntity<Void> registerToken(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
             @Valid @RequestBody FcmTokenRegisterRequestDto request) {
+        Long userId = userDetails.getUserId();
         fcmService.registerToken(userId, request.getToken(), request.getPlatform());
         return ResponseEntity.ok().build();
     }
@@ -32,7 +34,7 @@ public class FcmController {
         return ResponseEntity.ok().build();
     }
 
-    // 특정 사용자에게 푸시 알림 전송 (관리자용 또는 테스트용)
+    // 특정 사용자에게 푸시 알림 전송 (테스트용)
     @PostMapping("/send/{userId}")
     public ResponseEntity<Void> sendNotification(
             @PathVariable Long userId,
@@ -41,7 +43,6 @@ public class FcmController {
         return ResponseEntity.ok().build();
     }
 
-    // 모든 사용자에게 브로드캐스트 (관리자용)
     @PostMapping("/broadcast")
     public ResponseEntity<Void> broadcastNotification(
             @Valid @RequestBody FcmSendRequestDto request) {

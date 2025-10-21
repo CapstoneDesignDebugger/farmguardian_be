@@ -1,5 +1,6 @@
 package com.farmguardian.farmguardian.controller;
 
+import com.farmguardian.farmguardian.config.auth.UserDetailsImpl;
 import com.farmguardian.farmguardian.dto.request.SignInRequestDto;
 import com.farmguardian.farmguardian.dto.request.SignOutRequestDto;
 import com.farmguardian.farmguardian.dto.request.SignUpRequestDto;
@@ -8,6 +9,7 @@ import com.farmguardian.farmguardian.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,15 +35,21 @@ public class AuthController {
 
     // 로그아웃
     @PostMapping("/signout")
-    public ResponseEntity<Void> signOut(@Valid @RequestBody SignOutRequestDto request) {
-        authService.signOut(request);
+    public ResponseEntity<Void> signOut(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody SignOutRequestDto request) {
+        Long userId = userDetails.getUserId();
+        authService.signOut(userId, request.getRefreshToken(), request.getClientUuid());
         return ResponseEntity.ok().build();
     }
 
     // 회원탈퇴
     @DeleteMapping("/withdraw")
-    public ResponseEntity<Void> withdraw(@RequestHeader("Authorization") String token) {
-        authService.withdraw(token);
+    public ResponseEntity<Void> withdraw(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUserId();
+        authService.withdraw(userId);
         return ResponseEntity.ok().build();
     }
+
+    //TODO : accessToken 만료 시 refreshToken으로 토큰 재발급 하는 api 필요.
 }
