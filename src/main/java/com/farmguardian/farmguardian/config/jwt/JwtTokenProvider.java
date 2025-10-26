@@ -1,7 +1,6 @@
 package com.farmguardian.farmguardian.config.jwt;
 
 import com.farmguardian.farmguardian.config.auth.UserDetailsImpl;
-import com.farmguardian.farmguardian.dto.response.TokenResponseDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -103,7 +102,7 @@ public class JwtTokenProvider {
         String role = getRoleFromToken(token);
         Long userId = getUserIdFromToken(token);
 
-        // ROLE_ prefix를 Spring Security 권한 형식으로 추가
+        // ROLE_ prefix 형식 추가
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority("ROLE_" + role)
         );

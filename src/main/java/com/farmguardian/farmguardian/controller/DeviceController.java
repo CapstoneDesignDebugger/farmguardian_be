@@ -49,7 +49,7 @@ public class DeviceController {
     @GetMapping("/{deviceId}")
     public ResponseEntity<DeviceResponseDto> getDevice(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long deviceId) {
+            @PathVariable("deviceId") Long deviceId) {
         Long userId = userDetails.getUserId();
         DeviceResponseDto response = deviceService.getDeviceById(userId, deviceId);
         return ResponseEntity.ok(response);
@@ -59,7 +59,7 @@ public class DeviceController {
     @PatchMapping("/{deviceId}")
     public ResponseEntity<DeviceResponseDto> updateDevice(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long deviceId,
+            @PathVariable("deviceId") Long deviceId,
             @RequestBody DeviceUpdateRequestDto request) {
         Long userId = userDetails.getUserId();
         DeviceResponseDto response = deviceService.updateDevice(userId, deviceId, request);
@@ -70,11 +70,12 @@ public class DeviceController {
     @DeleteMapping("/{deviceId}")
     public ResponseEntity<Void> disconnectDevice(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @PathVariable Long deviceId) {
+            @PathVariable("deviceId") Long deviceId) {
         Long userId = userDetails.getUserId();
         deviceService.disconnectDevice(userId, deviceId);
         return ResponseEntity.ok().build();
     }
 
-    // TODO : 현재 내 디바이스가 연결 가능한지 확인 하는 기능 추가.
+    // TODO : 현재 내가 보유중인 디바이스가 연결 가능한지 확인 하는 기능 추가.
+    // deviceUuid 를 입력하면 해당 device가 이미 다른 유저와 연결되어있는지 확인 후 연결이 없다면 연결 가능,
 }

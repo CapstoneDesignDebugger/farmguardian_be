@@ -19,4 +19,5 @@ public class FcmTokenRegisterRequestDto {
 
     @NotNull(message = "플랫폼 정보는 필수입니다")
     private Platform platform;
+
 }
