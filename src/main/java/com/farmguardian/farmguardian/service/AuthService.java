@@ -95,4 +95,37 @@ public class AuthService {
 
         userRepository.delete(user);
     }
+
+    @Transactional
+    public TokenResponseDto refreshAccessToken(String refreshTokenValue, String clientUuid) {
+        // Refresh Token 유효성 검증
+        if (!jwtTokenProvider.validateToken(refreshTokenValue)) {
+            throw new IllegalArgumentException("유효하지 않거나 만료된 리프레시 토큰입니다.");
+        }
+
+        // DB에서 Refresh Token 조회
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리프레시 토큰입니다."));
+
+        // Client UUID 일치 확인 (디바이스 검증)
+        if (!refreshToken.getClientUuid().equals(clientUuid)) {
+            throw new IllegalArgumentException("디바이스 정보가 일치하지 않습니다.");
+        }
+
+        // 사용자 조회
+        User user = refreshToken.getUser();
+
+        // 새로운 Access Token 생성
+        String newAccessToken = jwtTokenProvider.createAccessToken(
+                user.getEmail(),
+                user.getRole().name(),
+                user.getId()
+        );
+
+        // RTR 패턴: 새로운 Refresh Token 생성 및 DB 갱신
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+        refreshToken.updateToken(newRefreshToken);
+
+        return new TokenResponseDto("Bearer", newAccessToken, newRefreshToken);
+    }
 }
