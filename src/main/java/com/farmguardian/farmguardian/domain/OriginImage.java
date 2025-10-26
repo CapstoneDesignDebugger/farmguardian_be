@@ -2,6 +2,7 @@ package com.farmguardian.farmguardian.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -41,5 +42,19 @@ public class OriginImage {
 
     @Column(columnDefinition = "json")
     private String analysisResult;  // JSON 문자열 그대로 저장
+
+
+    @Builder
+    public OriginImage(Device device, String cloudUrl, Integer width, Integer height) {
+        this.device = device;
+        this.cloudUrl = cloudUrl;
+        this.width = width;
+        this.height = height;
+    }
+
+    // 분석 결과 업데이트
+    public void updateAnalysisResult(String analysisResultJson) {
+        this.analysisResult = analysisResultJson;
+    }
 
 }
