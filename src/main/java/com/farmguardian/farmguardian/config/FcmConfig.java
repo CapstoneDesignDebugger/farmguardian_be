@@ -37,6 +37,7 @@ public class FcmConfig {
 
         } catch (IOException e) {
             log.error("Firebase initialization failed", e);
+            throw new IllegalStateException("Firebase 초기화에 실패했습니다." + e);
         }
     }
 }
