@@ -28,8 +28,11 @@ out/
 application.properties
 application-dev.properties
 application-local.yml
+application-prod.yml
+application-secret.yml
 .env
 secret/
+.pem
 
 # Firebase credentials
 *firebase*.json

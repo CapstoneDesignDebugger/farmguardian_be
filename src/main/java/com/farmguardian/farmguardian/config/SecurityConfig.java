@@ -38,7 +38,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/",
                                 "/api/fcm/**",
-                                "/api/auth/**").permitAll()
+                                "/api/auth/**",
+                                "/api/images/**",
+                                "/api/devices/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 )
 

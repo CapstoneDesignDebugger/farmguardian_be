@@ -34,7 +34,7 @@ public class ImageService {
     private final RestClient fastApiRestClient;
     private final ObjectMapper objectMapper;
 
-    private static final double CONFIDENCE_THRESHOLD = 0.6;
+    private static final double CONFIDENCE_THRESHOLD = 0.5;
 
     @Transactional
     public ImageAnalysisResponseDto analyzeImage(ImageMetadataRequestDto request) {
@@ -53,8 +53,7 @@ public class ImageService {
 
         // 3. FastAPI 요청 데이터 생성
         FastApiRequestDto fastApiRequest = new FastApiRequestDto();
-        fastApiRequest.setCloudUrl(request.getCloudUrl());
-        fastApiRequest.setTargetCrop(device.getTargetCrop() != null ? device.getTargetCrop().name() : null);
+        fastApiRequest.setUrl(request.getCloudUrl());
 
         // 4. FastAPI 호출
         FastApiResponseDto fastApiResponse = callFastApi(fastApiRequest);
@@ -63,7 +62,9 @@ public class ImageService {
         String analysisResultJson = convertToJson(fastApiResponse);
         originImage.updateAnalysisResult(analysisResultJson);
 
-        // 6. confidence >= 0.8 인 객체 필터링
+        log.info("이미지 분석 결과: {}", analysisResultJson);
+
+        // 6. confidence >= 0.5 인 객체 필터링
         List<ImageAnalysisResponseDto.PestInfo> detectedPests = filterHighConfidencePests(fastApiResponse);
         boolean pestDetected = !detectedPests.isEmpty();
 
@@ -84,7 +85,7 @@ public class ImageService {
     private FastApiResponseDto callFastApi(FastApiRequestDto request) {
         try {
             return fastApiRestClient.post()
-                    .uri("/analyze")
+                    .uri("/v1/infer")
                     .body(request)
                     .retrieve()
                     .body(FastApiResponseDto.class);
@@ -94,7 +95,6 @@ public class ImageService {
         }
     }
 
-    //TODO: FastApiResponseDto 구조 변경에 따라 수정 필요
     private List<ImageAnalysisResponseDto.PestInfo> filterHighConfidencePests(FastApiResponseDto response) {
         List<ImageAnalysisResponseDto.PestInfo> pestList = new ArrayList<>();
 
@@ -103,31 +103,26 @@ public class ImageService {
         }
 
         for (FastApiResponseDto.DetectedObject obj : response.getDetectedObjects()) {
-            if (obj.getConfidence() == null || obj.getConfidence().isEmpty()) {
+            if (obj.getConfidence() == null) {
                 continue;
             }
 
-            // confidence는 List<Map<String, Double>> 형태
-            for (Map<String, Double> confidenceMap : obj.getConfidence()) {
-                for (Map.Entry<String, Double> entry : confidenceMap.entrySet()) {
-                    if (entry.getValue() >= CONFIDENCE_THRESHOLD) {
-                        // BoundingBox는 리스트의 첫 번째 요소 사용
-                        FastApiResponseDto.BoundingBox boundingBox =
-                                obj.getPoints() != null && !obj.getPoints().isEmpty() ? obj.getPoints().get(0) : null;
-
-                        ImageAnalysisResponseDto.PestInfo pestInfo = ImageAnalysisResponseDto.PestInfo.builder()
-                                .pestName(entry.getKey())
-                                .confidence(entry.getValue())
-                                .boundingBox(boundingBox)
-                                .build();
-                        pestList.add(pestInfo);
-                    }
+            // confidence는 Map<String, Double> 형태
+            for (Map.Entry<String, Double> entry : obj.getConfidence().entrySet()) {
+                if (entry.getValue() >= CONFIDENCE_THRESHOLD) {
+                    ImageAnalysisResponseDto.PestInfo pestInfo = ImageAnalysisResponseDto.PestInfo.builder()
+                            .pestName(entry.getKey())
+                            .confidence(entry.getValue())
+                            .boundingBox(obj.getPoints())
+                            .build();
+                    pestList.add(pestInfo);
                 }
             }
         }
 
         return pestList;
     }
+
 
     private void sendPestDetectionNotification(Long userId, int pestCount, String cloudUrl) {
         try {
