@@ -8,8 +8,5 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class FastApiRequestDto {
-
-    private String cloudUrl;
-
-    private String targetCrop;
+    private String url;
 }

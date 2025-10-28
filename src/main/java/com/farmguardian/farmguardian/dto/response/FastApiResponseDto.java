@@ -25,7 +25,7 @@ public class FastApiResponseDto {
     public static class DetectedObject {
         private Integer id;
         private BoundingBox points;
-        private List<Map<String, Double>> confidence;
+        private Map<String, Double> confidence;
         private String grow;
     }
 
@@ -33,10 +33,10 @@ public class FastApiResponseDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BoundingBox {
-        private Integer xtl;    // x top left
-        private Integer ytl;    // y top left
-        private Integer xbr;    // x bottom right
-        private Integer ybr;    // y bottom right
+        private Double xtl;    // x top left
+        private Double ytl;    // y top left
+        private Double xbr;    // x bottom right
+        private Double ybr;    // y bottom right
     }
 }
 
