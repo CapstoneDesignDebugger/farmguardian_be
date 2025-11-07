@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class DeviceResponseDto {
     private Long id;
     private String deviceUuid;
+    private String alias;
     private TargetCrop targetCrop;
     private String targetCropName;
     private BigDecimal latitude;
@@ -27,6 +28,7 @@ public class DeviceResponseDto {
     public static DeviceResponseDto from(Device device) {
         return DeviceResponseDto.builder()
                 .id(device.getId())
+                .alias(device.getAlias())
                 .deviceUuid(device.getDeviceUuid())
                 .targetCrop(device.getTargetCrop())
                 .targetCropName(device.getTargetCrop() != null ? device.getTargetCrop().getKoreanName() : null)

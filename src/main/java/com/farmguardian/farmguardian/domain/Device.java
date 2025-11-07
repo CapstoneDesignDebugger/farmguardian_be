@@ -27,6 +27,9 @@ public class Device extends BaseDate {
     @Column(name = "device_uuid", unique = true, nullable = false, updatable = false)
     private String deviceUuid;
 
+    @Column(name = "alias", length = 10)
+    private String alias;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private DeviceStatus status;
@@ -54,8 +57,9 @@ public class Device extends BaseDate {
         this.longitude = longitude;
     }
 
-    public void connectToUser(User user, TargetCrop targetCrop, BigDecimal latitude, BigDecimal longitude) {
+    public void connectToUser(User user, String alias, TargetCrop targetCrop, BigDecimal latitude, BigDecimal longitude) {
         this.user = user;
+        this.alias = alias;
         this.status = DeviceStatus.CONNECTED;
         this.targetCrop = targetCrop;
         this.latitude = latitude;
@@ -64,6 +68,7 @@ public class Device extends BaseDate {
 
     public void disconnectFromUser() {
         this.user = null;
+        this.alias = null;
         this.status = DeviceStatus.AVAILABLE;
         this.targetCrop = null;
         this.latitude = null;
@@ -82,6 +87,12 @@ public class Device extends BaseDate {
     public void updateTargetCrop(TargetCrop targetCrop) {
         if (targetCrop != null) {
             this.targetCrop = targetCrop;
+        }
+    }
+
+    public void updateAlias(String alias) {
+        if (alias != null) {
+            this.alias = alias;
         }
     }
 }

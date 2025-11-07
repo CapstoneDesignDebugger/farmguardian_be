@@ -40,6 +40,7 @@ public class DeviceService {
         // 디바이스 연결
         device.connectToUser(
                 user,
+                request.getAlias(),
                 request.getTargetCrop(),
                 request.getLatitude(),
                 request.getLongitude()
@@ -81,6 +82,7 @@ public class DeviceService {
                 .orElseThrow(() -> new RuntimeException("Device not found or unauthorized"));
 
         // 비즈니스 메서드를 통한 업데이트
+        device.updateAlias(request.getAlias());
         device.updateTargetCrop(request.getTargetCrop());
         device.updateLocation(request.getLatitude(), request.getLongitude());
 
