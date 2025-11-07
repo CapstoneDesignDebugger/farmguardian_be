@@ -5,6 +5,7 @@ import com.farmguardian.farmguardian.dto.request.DeviceConnectRequestDto;
 import com.farmguardian.farmguardian.dto.request.DeviceUpdateRequestDto;
 import com.farmguardian.farmguardian.dto.response.DeviceResponseDto;
 import com.farmguardian.farmguardian.service.DeviceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,7 +24,7 @@ public class DeviceController {
     @PostMapping("/connect")
     public ResponseEntity<DeviceResponseDto> connectDevice(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody DeviceConnectRequestDto request) {
+            @Valid @RequestBody DeviceConnectRequestDto request) {
         Long userId = userDetails.getUserId();
         DeviceResponseDto response = deviceService.connectDevice(userId, request);
         return ResponseEntity.ok(response);
@@ -35,7 +36,6 @@ public class DeviceController {
         List<DeviceResponseDto> responses = deviceService.getAvailableDevices();
         return ResponseEntity.ok(responses);
     }
-
     // 내 디바이스 목록 조회
     @GetMapping
     public ResponseEntity<List<DeviceResponseDto>> getMyDevices(
@@ -60,7 +60,7 @@ public class DeviceController {
     public ResponseEntity<DeviceResponseDto> updateDevice(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("deviceId") Long deviceId,
-            @RequestBody DeviceUpdateRequestDto request) {
+            @Valid @RequestBody DeviceUpdateRequestDto request) {
         Long userId = userDetails.getUserId();
         DeviceResponseDto response = deviceService.updateDevice(userId, deviceId, request);
         return ResponseEntity.ok(response);
