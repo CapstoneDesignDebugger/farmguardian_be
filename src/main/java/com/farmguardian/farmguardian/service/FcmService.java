@@ -70,6 +70,21 @@ public class FcmService {
                     .setToken(token)
                     .setNotification(notification);
 
+            // originImageId가 있으면 data payload에 추가
+            if (request.getOriginImageId() != null) {
+                messageBuilder.putData("originImageId", String.valueOf(request.getOriginImageId()));
+            }
+
+            // cloudUrl이 있으면 data payload에 추가
+            if (request.getCloudUrl() != null) {
+                messageBuilder.putData("cloudUrl", request.getCloudUrl());
+            }
+
+            // deviceId가 있으면 data payload에 추가
+            if (request.getDeviceId() != null) {
+                messageBuilder.putData("deviceId", String.valueOf(request.getDeviceId()));
+            }
+
             String response = FirebaseMessaging.getInstance().send(messageBuilder.build());
             log.info("Successfully sent message: {}", response);
 

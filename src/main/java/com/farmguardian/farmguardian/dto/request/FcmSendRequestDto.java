@@ -20,5 +20,10 @@ public class FcmSendRequestDto {
     @NotBlank(message = "내용은 필수입니다")
     private String body;
 
-    //TODO : 추가 데이터 설정 필요. e.g 이미지 저장 된 클라우드 url, 분석결과 json 등..
+    // 해충 감지 이미지 ID (푸시 알림 클릭 시 상세 조회용)
+    private Long originImageId;
+
+    private String cloudUrl;
+
+    private Long deviceId;
 }
