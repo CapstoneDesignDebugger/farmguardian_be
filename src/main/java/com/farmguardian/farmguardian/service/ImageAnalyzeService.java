@@ -1,7 +1,5 @@
 package com.farmguardian.farmguardian.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.farmguardian.farmguardian.domain.Device;
 import com.farmguardian.farmguardian.domain.OriginImage;
 import com.farmguardian.farmguardian.dto.request.FastApiRequestDto;
@@ -14,24 +12,22 @@ import com.farmguardian.farmguardian.repository.OriginImageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ImageService {
+public class ImageAnalyzeService {
 
     private final DeviceRepository deviceRepository;
     private final OriginImageRepository originImageRepository;
     private final FcmService fcmService;
+    private final ImageService imageService;
     private final RestClient fastApiRestClient;
-    private final ObjectMapper objectMapper;
 
     private static final double CONFIDENCE_THRESHOLD = 0.6;
 
@@ -40,12 +36,11 @@ public class ImageService {
         Device device = deviceRepository.findByDeviceUuid(request.getDeviceUuid())
                 .orElseThrow(() -> new IllegalArgumentException("디바이스를 찾을 수 없습니다: " + request.getDeviceUuid()));
 
-        OriginImage originImage = saveMetaData(request, device);   // db 저장 (api 호출이 실패해 분석결과가 없어도 메타데이터는 저장 필요.)
+        OriginImage originImage = imageService.saveMetaData(request, device);   // db 저장 (api 호출이 실패해 분석결과가 없어도 메타데이터는 저장 필요.)
 
         FastApiResponseDto fastApiResponse = callFastApi(request); // 외부 api 호출
 
-        String analysisResultJson = convertToJson(fastApiResponse);
-        originImage.updateAnalysisResult(analysisResultJson);
+        imageService.saveAnalysisResult(originImage.getId(), fastApiResponse);
 
         List<ImageAnalysisResponseDto.PestInfo> detectedPests = filterHighConfidencePests(fastApiResponse);
         boolean pestDetected = !detectedPests.isEmpty();
@@ -61,31 +56,6 @@ public class ImageService {
                 .pestDetected(pestDetected)
                 .pests(detectedPests)
                 .build();
-    }
-
-    @Transactional
-    protected OriginImage saveMetaData(ImageMetadataRequestDto request, Device device) {
-
-        OriginImage originImage = OriginImage.builder()
-                .device(device)
-                .cloudUrl(request.getCloudUrl())
-                .width(request.getWidth())
-                .height(request.getHeight())
-                .build();
-
-        originImage = originImageRepository.save(originImage);
-        return originImage;
-    }
-
-    @Transactional
-    protected void saveAnalysisResult(Long originImageId, FastApiResponseDto fastApiResponse) {
-        String analysisResultJson = convertToJson(fastApiResponse);
-
-        OriginImage originImage = originImageRepository.findById(originImageId)
-                .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다"));
-
-        originImage.updateAnalysisResult(analysisResultJson);
-        log.info("이미지 분석 결과 저장 완료 - originImageId: {}", originImageId);
     }
 
     private FastApiResponseDto callFastApi(ImageMetadataRequestDto request) {
@@ -129,34 +99,33 @@ public class ImageService {
             }
         }
 
+
         return pestList;
     }
 
     private void sendPestDetectionNotification(Long userId, int pestCount, Long originImageId) {
         try {
-            Optional<OriginImage> originImage = originImageRepository.findById(originImageId);
-            String cloudUrl = originImage.get().getCloudUrl();
+            OriginImage originImage = originImageRepository.findById(originImageId)
+                    .orElse(null);
+
+            if (originImage == null) {
+                log.warn("이미지를 찾을 수 없어 FCM 알림을 보낼 수 없습니다. originImageId: {}", originImageId);
+                return;
+            }
 
             FcmSendRequestDto fcmRequest = new FcmSendRequestDto(
                     "해충 감지 알림",
                     String.format("감지된 해충: %d개", pestCount),
                     originImageId,
-                    cloudUrl
+                    originImage.getCloudUrl(),
+                    originImage.getDevice().getId()
             );
             fcmService.sendNotificationToUser(userId, fcmRequest);
-            log.info("FCM 푸시 알림 발송 완료 - userId: {}, pestCount: {}, originImageId: {}", userId, pestCount, originImageId);
+            log.info("FCM 푸시 알림 발송 완료 - userId: {}, pestCount: {}, originImageId: {}, deviceId: {}",
+                    userId, pestCount, originImageId, originImage.getDevice().getId());
         } catch (Exception e) {
             log.error("FCM 푸시 알림 발송 실패: {}", e.getMessage(), e);
-            // 알림 발송 실패는 전체 프로세스를 중단시키지 않음
         }
     }
 
-    private String convertToJson(FastApiResponseDto response) {
-        try {
-            return objectMapper.writeValueAsString(response);
-        } catch (JsonProcessingException e) {
-            log.error("JSON 변환 실패: {}", e.getMessage(), e);
-            return "{}";
-        }
-    }
 }
