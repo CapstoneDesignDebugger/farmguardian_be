@@ -1,12 +1,14 @@
 package com.farmguardian.farmguardian.service;
 
 import com.farmguardian.farmguardian.config.jwt.JwtTokenProvider;
+import com.farmguardian.farmguardian.domain.Device;
 import com.farmguardian.farmguardian.domain.RefreshToken;
 import com.farmguardian.farmguardian.domain.Role;
 import com.farmguardian.farmguardian.domain.User;
 import com.farmguardian.farmguardian.dto.request.SignInRequestDto;
 import com.farmguardian.farmguardian.dto.request.SignUpRequestDto;
 import com.farmguardian.farmguardian.dto.response.TokenResponseDto;
+import com.farmguardian.farmguardian.repository.DeviceRepository;
 import com.farmguardian.farmguardian.repository.RefreshTokenRepository;
 import com.farmguardian.farmguardian.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final DeviceRepository deviceRepository;
 
     @Transactional
     public Long signUp(SignUpRequestDto request) {
@@ -90,9 +93,14 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
+        // 사용자의 모든 디바이스 연결 해제 (Device는 남기고 연결 정보만 초기화)
+        deviceRepository.findAllByUserId(userId)
+                .forEach(Device::disconnectFromUser);
+
         // 모든 디바이스의 리프레시 토큰 삭제
         refreshTokenRepository.deleteByUser(user);
 
+        // 사용자 soft delete
         userRepository.delete(user);
     }
 
