@@ -6,6 +6,10 @@ import com.farmguardian.farmguardian.domain.User;
 import com.farmguardian.farmguardian.dto.request.DeviceConnectRequestDto;
 import com.farmguardian.farmguardian.dto.request.DeviceUpdateRequestDto;
 import com.farmguardian.farmguardian.dto.response.DeviceResponseDto;
+import com.farmguardian.farmguardian.exception.auth.UserNotFoundException;
+import com.farmguardian.farmguardian.exception.device.DeviceAlreadyConnectedException;
+import com.farmguardian.farmguardian.exception.device.DeviceNotFoundException;
+import com.farmguardian.farmguardian.exception.device.UnauthorizedDeviceAccessException;
 import com.farmguardian.farmguardian.repository.DeviceRepository;
 import com.farmguardian.farmguardian.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,14 +31,14 @@ public class DeviceService {
     @Transactional
     public DeviceResponseDto connectDevice(Long userId, DeviceConnectRequestDto request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(UserNotFoundException::new);
 
         Device device = deviceRepository.findByDeviceUuid(request.getDeviceUuid())
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+                .orElseThrow(DeviceNotFoundException::new);
 
         // 이미 연결된 디바이스인지 확인
         if (device.getStatus() == DeviceStatus.CONNECTED) {
-            throw new RuntimeException("Device already connected");
+            throw new DeviceAlreadyConnectedException();
         }
 
         // 디바이스 연결
@@ -52,7 +56,7 @@ public class DeviceService {
     // 디바이스 상세 조회
     public DeviceResponseDto getDeviceById(Long userId, Long deviceId) {
         Device device = deviceRepository.findByIdAndUserId(deviceId, userId)
-                .orElseThrow(() -> new RuntimeException("Device not found or unauthorized"));
+                .orElseThrow(UnauthorizedDeviceAccessException::new);
 
         return DeviceResponseDto.from(device);
     }
@@ -79,7 +83,7 @@ public class DeviceService {
     @Transactional
     public DeviceResponseDto updateDevice(Long userId, Long deviceId, DeviceUpdateRequestDto request) {
         Device device = deviceRepository.findByIdAndUserId(deviceId, userId)
-                .orElseThrow(() -> new RuntimeException("Device not found or unauthorized"));
+                .orElseThrow(UnauthorizedDeviceAccessException::new);
 
         // 비즈니스 메서드를 통한 업데이트
         device.updateAlias(request.getAlias());
@@ -93,7 +97,7 @@ public class DeviceService {
     @Transactional
     public void disconnectDevice(Long userId, Long deviceId) {
         Device device = deviceRepository.findByIdAndUserId(deviceId, userId)
-                .orElseThrow(() -> new RuntimeException("Device not found or unauthorized"));
+                .orElseThrow(UnauthorizedDeviceAccessException::new);
 
         device.disconnectFromUser();
     }

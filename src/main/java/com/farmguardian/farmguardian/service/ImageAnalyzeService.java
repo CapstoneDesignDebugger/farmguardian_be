@@ -7,6 +7,9 @@ import com.farmguardian.farmguardian.dto.request.FcmSendRequestDto;
 import com.farmguardian.farmguardian.dto.request.ImageMetadataRequestDto;
 import com.farmguardian.farmguardian.dto.response.FastApiResponseDto;
 import com.farmguardian.farmguardian.dto.response.ImageAnalysisResponseDto;
+import com.farmguardian.farmguardian.exception.device.DeviceNotFoundException;
+import com.farmguardian.farmguardian.exception.image.FastApiCallFailedException;
+import com.farmguardian.farmguardian.exception.image.ImageNotFoundException;
 import com.farmguardian.farmguardian.repository.DeviceRepository;
 import com.farmguardian.farmguardian.repository.OriginImageRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +37,7 @@ public class ImageAnalyzeService {
     public ImageAnalysisResponseDto analyzeImage(ImageMetadataRequestDto request) {
 
         Device device = deviceRepository.findByDeviceUuid(request.getDeviceUuid())
-                .orElseThrow(() -> new IllegalArgumentException("디바이스를 찾을 수 없습니다: " + request.getDeviceUuid()));
+                .orElseThrow(DeviceNotFoundException::new);
 
         OriginImage originImage = imageService.saveMetaData(request, device);   // db 저장 (api 호출이 실패해 분석결과가 없어도 메타데이터는 저장 필요.)
 
@@ -49,7 +52,7 @@ public class ImageAnalyzeService {
             sendPestDetectionNotification(device.getUser().getId(), detectedPests.size(), originImage.getId());
         }
 
-        // 8. 응답 생성
+        // 응답 생성
         return ImageAnalysisResponseDto.builder()
                 .originImageId(originImage.getId())
                 .cloudUrl(request.getCloudUrl())
@@ -70,7 +73,7 @@ public class ImageAnalyzeService {
                     .body(FastApiResponseDto.class);
         } catch (Exception e) {
             log.error("FastAPI 호출 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("이미지 분석 중 오류가 발생했습니다 by callFastApi", e);
+            throw new FastApiCallFailedException("이미지 분석 중 오류가 발생했습니다");
         }
     }
 

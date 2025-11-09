@@ -2,6 +2,11 @@ package com.farmguardian.farmguardian.service;
 
 import com.farmguardian.farmguardian.domain.Device;
 import com.farmguardian.farmguardian.domain.DeviceStatus;
+import com.farmguardian.farmguardian.exception.device.DeviceNotConnectedException;
+import com.farmguardian.farmguardian.exception.device.DeviceNotFoundException;
+import com.farmguardian.farmguardian.exception.device.UnauthorizedDeviceAccessException;
+import com.farmguardian.farmguardian.exception.mqtt.MqttSendFailedException;
+import com.farmguardian.farmguardian.exception.mqtt.NightTimeCaptureForbiddenException;
 import com.farmguardian.farmguardian.gateway.MqttGateway;
 import com.farmguardian.farmguardian.repository.DeviceRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,23 +36,25 @@ public class MqttService {
     public void requestCapture(Long userId, Long deviceId) {
         // 1. Device 존재 여부 확인
         Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new RuntimeException("Device not found"));
+                .orElseThrow(DeviceNotFoundException::new);
 
         // 2. Device 소유권 확인
         if (device.getUser() == null || !device.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Device ownership verification failed");
+            throw new UnauthorizedDeviceAccessException();
         }
 
         // 3. Device 연결 상태 확인
         if (device.getStatus() != DeviceStatus.CONNECTED) {
-            throw new RuntimeException("Device is not connected");
+            throw new DeviceNotConnectedException();
         }
 
         // 4. 촬영 시간 검증 (밤 시간인지 확인)
+        /*
         LocalTime currentTime = LocalTime.now();
         if (isNightTime(currentTime)) {
-            throw new RuntimeException("Cannot capture during night time (19:00 ~ 06:00)");
+            throw new NightTimeCaptureForbiddenException();
         }
+         */
 
         // 5. 동적 토픽 생성
         String topic = CAPTURE_TOPIC_PREFIX + device.getDeviceUuid();
@@ -60,8 +67,9 @@ public class MqttService {
             mqttGateway.sendToMqtt(topic, payload);
             log.info("MQTT capture command sent - Topic: {}, DeviceUuid: {}", topic, device.getDeviceUuid());
         } catch (Exception e) {
-            log.error("Failed to send MQTT message - Topic: {}, DeviceUuid: {}", topic, device.getDeviceUuid(), e);
-            throw new RuntimeException("Failed to send capture command", e);
+            log.error("Failed to send MQTT message - UserId: {}, DeviceId: {}, Topic: {}, Payload: {}",
+                    userId, deviceId, topic, payload, e);
+            throw new MqttSendFailedException("MQTT 메시지 전송 실패");
         }
     }
 

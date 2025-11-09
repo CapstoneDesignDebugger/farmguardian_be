@@ -4,6 +4,7 @@ import com.farmguardian.farmguardian.domain.FcmToken;
 import com.farmguardian.farmguardian.domain.Platform;
 import com.farmguardian.farmguardian.domain.User;
 import com.farmguardian.farmguardian.dto.request.FcmSendRequestDto;
+import com.farmguardian.farmguardian.exception.auth.UserNotFoundException;
 import com.farmguardian.farmguardian.repository.FcmTokenRepository;
 import com.farmguardian.farmguardian.repository.UserRepository;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -30,7 +31,7 @@ public class FcmService {
     @Transactional
     public void registerToken(Long userId, String tokenValue, Platform platform) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+                .orElseThrow(UserNotFoundException::new);
 
         Optional<FcmToken> existingToken = fcmTokenRepository.findByTokenValue(tokenValue);
 

@@ -4,7 +4,10 @@ import com.farmguardian.farmguardian.domain.Device;
 import com.farmguardian.farmguardian.domain.OriginImage;
 import com.farmguardian.farmguardian.dto.request.ImageMetadataRequestDto;
 import com.farmguardian.farmguardian.dto.response.FastApiResponseDto;
-import com.farmguardian.farmguardian.dto.response.ImageResponseDto;
+import com.farmguardian.farmguardian.dto.response.ImageListResponseDto;
+import com.farmguardian.farmguardian.dto.response.ImageDetailResponseDto;
+import com.farmguardian.farmguardian.exception.image.ImageAnalysisFailedException;
+import com.farmguardian.farmguardian.exception.image.ImageNotFoundException;
 import com.farmguardian.farmguardian.repository.OriginImageRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +46,7 @@ public class ImageService {
         String analysisResultJson = convertToJson(fastApiResponse);
 
         OriginImage originImage = originImageRepository.findById(originImageId)
-                .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다"));
+                .orElseThrow(ImageNotFoundException::new);
 
         originImage.updateAnalysisResult(analysisResultJson);
         log.info("이미지 분석 결과 저장 완료 - originImageId: {}", originImageId);
@@ -54,25 +57,26 @@ public class ImageService {
             return objectMapper.writeValueAsString(response);
         } catch (JsonProcessingException e) {
             log.error("JSON 변환 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("분석 결과 JSON 변환 실패", e);
+            throw new ImageAnalysisFailedException("분석 결과 JSON 변환 실패");
         }
     }
 
     // 사용자의 모든 디바이스 이미지 목록 조회
-    public Slice<ImageResponseDto> getAllImagesByUser(Long userId, Pageable pageable) {
+    public Slice<ImageListResponseDto> getAllImagesByUser(Long userId, Pageable pageable) {
         Slice<OriginImage> images = originImageRepository.findAllByDevice_User_IdOrderByCreatedAtDesc(userId, pageable);
-        return images.map(ImageResponseDto::from);
+        return images.map(ImageListResponseDto::from);
     }
 
     // 특정 디바이스의 이미지 목록 조회
-    public Slice<ImageResponseDto> getImagesByDevice(Long deviceId, Pageable pageable) {
+    public Slice<ImageDetailResponseDto> getImagesByDevice(Long deviceId, Pageable pageable) {
         Slice<OriginImage> images = originImageRepository.findAllByDevice_IdOrderByCreatedAtDesc(deviceId, pageable);
-        return images.map(ImageResponseDto::from);
+        return images.map(ImageDetailResponseDto::from);
     }
 
     // 이미지 상세 조회
-    public OriginImage getImageById(Long originImageId) {
-        return originImageRepository.findById(originImageId)
-                .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다"));
+    public ImageDetailResponseDto getImageById(Long originImageId) {
+        OriginImage originImage = originImageRepository.findById(originImageId)
+                .orElseThrow(ImageNotFoundException::new);
+        return ImageDetailResponseDto.from(originImage);
     }
 }
