@@ -30,7 +30,7 @@ public class UserController {
     }
 
     /*
-        @PostMapping("/{userId}/devices/{deviceId}/capture")
+        @PostMapping("/{userId}/devices/{deviceId}/capture
     public ResponseEntity<String> requestCapture(
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @PathVariable("deviceId") Long deviceId) {
